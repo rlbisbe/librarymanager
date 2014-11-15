@@ -1,0 +1,45 @@
+﻿@model IEnumerable<LibraryManager.Repository.Book>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>All books</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create", "Books", null, new { @class = "btn btn-primary" })
+</p>
+<table class="table">
+    <tr>
+        <th>Book Title</th>
+        <th>Actions</th>
+        <th>Other actions</th>
+
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Title </td>
+            <td>
+                @*@if (@item.CurrentUser == null)
+                {
+                    @Html.ActionLink("Borrow", "Borrow", new { id = item.Id.ToString() })
+                }
+                else if (@item.CurrentUser.UserName == User.Identity.Name)
+                {
+                    <span>You have this book - </span>
+                    @Html.ActionLink("Return", "Return", new { id = item.Id.ToString() })
+                }
+                else
+                {
+                    <span>@item.CurrentUser.UserName has this book</span>
+                }*@
+            </td>
+            <td>
+                @Html.ActionLink("Delete", "Delete", new { id = item.Id.ToString() })
+            </td>
+        </tr>
+    }
+
+</table>

@@ -1,0 +1,19 @@
+{
+    "version": "1.0.0-*",
+    "dependencies": {
+"Microsoft.Azure.Documents.Client": "0.9.1.0-preview",
+"Microsoft.Framework.ConfigurationModel.Json": "1.0.0.0-beta1"
+    },
+
+    "frameworks" : {
+        "aspnet50" : { 
+            "dependencies": {
+            }
+        },
+        "aspnetcore50" : { 
+            "dependencies": {
+                "System.Runtime": "4.0.20-beta-22231"
+            }
+        }
+    }
+}
