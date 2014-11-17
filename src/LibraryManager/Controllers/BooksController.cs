@@ -3,6 +3,7 @@ using Microsoft.AspNet.Mvc;
 
 namespace LibraryManager.Controllers
 {
+    [Authorize]
     public class BooksController : Controller
     {
         private IBookRepository _bookRepository;

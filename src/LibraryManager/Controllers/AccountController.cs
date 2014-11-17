@@ -3,129 +3,65 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Principal;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Mvc;
 using LibraryManager.Models;
+using System.Security.Claims;
+using Microsoft.Net.Http.Server;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Http.Security;
+using LibraryManager.Repository;
 
 namespace LibraryManager.Controllers
 {
-    [Authorize]
     public class AccountController : Controller
     {
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserRepository userRepository)
         {
             UserManager = userManager;
             SignInManager = signInManager;
+            UserRepository = userRepository;
         }
 
         public UserManager<ApplicationUser> UserManager { get; private set; }
         public SignInManager<ApplicationUser> SignInManager { get; private set; }
+        public IUserRepository UserRepository { get; private set; }
 
-        // GET: /Account/Login
         [HttpGet]
-        [AllowAnonymous]
         public IActionResult Login(string returnUrl = null)
         {
-            ViewBag.ReturnUrl = returnUrl;
-            return View();
+            var properties = SignInManager.ConfigureExternalAuthenticationProperties("Google", Url.Action("ExternalCallback", "Account", new { ReturnUrl = returnUrl }));
+            return new ChallengeResult("Google", properties);
         }
 
-        //
-        // POST: /Account/Login
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        public async Task<IActionResult> ExternalCallback()
         {
-            if (ModelState.IsValid)
+            ExternalLoginInfo loginInfo = await SignInManager.GetExternalLoginInfoAsync();
+            if (loginInfo == null)
             {
-                var signInStatus = await SignInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, shouldLockout: false);
-                switch (signInStatus)
-                {
-                    case SignInStatus.Success:
-                        return RedirectToLocal(returnUrl);
-                    case SignInStatus.Failure:
-                    default:
-                        ModelState.AddModelError("", "Invalid username or password.");
-                        return View(model);
-                }
+                return RedirectToAction("Login"); //TODO: Add error message
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
+            string email = (from x in loginInfo.ExternalIdentity.Claims
+                            where x.Type.Contains("mail")
+                            select x.Value).FirstOrDefault();
 
-        //
-        // GET: /Account/Register
-        [AllowAnonymous]
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Account/Register
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
+            if (email == null)
             {
-                var user = new ApplicationUser { UserName = model.UserName };
-                var result = await UserManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    await SignInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    AddErrors(result);
-                }
+                return RedirectToAction("Login"); //TODO: Add error message
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
+            //if (loginInfo..Email.EndsWith("frontiersin.org") == false)
+            //{
+            //    return RedirectToAction("Login");
+            //}
 
-        //
-        // GET: /Account/Manage
-        [HttpGet]
-        public IActionResult Manage(ManageMessageId? message = null)
-        {
-            ViewBag.StatusMessage =
-                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
-                : message == ManageMessageId.Error ? "An error has occurred."
-                : "";
-            ViewBag.ReturnUrl = Url.Action("Manage");
-            return View();
-        }
+            // Sign in the user
+            var currentUser = new LibraryUser { Name = loginInfo.ExternalIdentity.Name, Email = email, ProviderKey = loginInfo.ProviderKey };
 
-        //
-        // POST: /Account/Manage
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Manage(ManageUserViewModel model)
-        {
-            ViewBag.ReturnUrl = Url.Action("Manage");
-            if (ModelState.IsValid)
-            {
-                var user = await GetCurrentUserAsync();
-                var result = await UserManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Manage", new { Message = ManageMessageId.ChangePasswordSuccess });
-                }
-                else
-                {
-                    AddErrors(result);
-                }
-            }
+            UserRepository.CreateIfNotExists(currentUser);
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+            Context.Response.SignIn(currentUser.GetClaimsIdentity());
+            return RedirectToAction("Index", "Books");
         }
 
         //
@@ -134,7 +70,7 @@ namespace LibraryManager.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult LogOff()
         {
-            SignInManager.SignOut();
+            Context.Response.SignOut();
             return RedirectToAction("Index", "Home");
         }
 
@@ -146,11 +82,6 @@ namespace LibraryManager.Controllers
             {
                 ModelState.AddModelError("", error);
             }
-        }
-
-        private async Task<ApplicationUser> GetCurrentUserAsync()
-        {
-            return await UserManager.FindByIdAsync(Context.User.Identity.GetUserId());
         }
 
         public enum ManageMessageId

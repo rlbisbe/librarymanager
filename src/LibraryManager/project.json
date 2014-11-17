@@ -9,7 +9,6 @@
         //"Microsoft.AspNet.Mvc.WebApiCompatShim": "6.0.0-beta1",
         "Microsoft.AspNet.Diagnostics": "1.0.0-beta1",
         "Microsoft.AspNet.Diagnostics.Entity": "7.0.0-beta1",
-        "Microsoft.AspNet.Identity.EntityFramework": "3.0.0-beta1",
         "Microsoft.AspNet.Security.Cookies": "1.0.0-beta1",
         "Microsoft.AspNet.Server.IIS": "1.0.0-beta1",
         "Microsoft.AspNet.Server.WebListener": "1.0.0-beta1",
@@ -19,8 +18,10 @@
         "Microsoft.Framework.Logging": "1.0.0-beta1",
         "Microsoft.Framework.Logging.Console": "1.0.0-beta1",
         "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-beta1",
-"LibraryManager.Repository": "1.0.0-*"
-    },
+"LibraryManager.Repository": "1.0.0-*",
+"Microsoft.Owin.Host.SystemWeb": "3.0.0.0",
+"Microsoft.AspNet.Security.Google": "1.0.0.0-beta1",
+"Microsoft.AspNet.Identity.EntityFramework": "3.0.0.0-beta1"    },
     "commands": {
         /* Change the port number when you are self hosting this application */
         "web": "Microsoft.AspNet.Hosting --server Microsoft.AspNet.Server.WebListener --server.urls http://localhost:5000",
